@@ -11,7 +11,6 @@ import androidx.lifecycle.viewModelScope
 import androidx.palette.graphics.Palette
 import com.example.pokedex.data.models.PokedexListEntry
 import com.example.pokedex.domain.PokedexRepository
-import com.example.pokedex.ui.navigation.PokemonDetails.pokemonId
 import com.example.pokedex.util.Constants.PAGE_SIZE
 import com.example.pokedex.util.Resource
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -26,7 +25,6 @@ class PokemonListViewModel @Inject constructor(
     private val repository: PokedexRepository,
 ) : ViewModel() {
 
-    private var curPage = 0
     private val _pokemonListUiState = MutableStateFlow(PokemonListUiState())
     val pokemonListUiState = _pokemonListUiState.asStateFlow()
 
@@ -44,7 +42,7 @@ class PokemonListViewModel @Inject constructor(
         viewModelScope.launch {
             val result = repository.getPokedexList(
                 limit = PAGE_SIZE,
-                offset = curPage * PAGE_SIZE
+                offset = pokemonListUiState.value.currPage * PAGE_SIZE
             )
             when (result) {
                 is Resource.Error -> {
@@ -65,14 +63,16 @@ class PokemonListViewModel @Inject constructor(
                 }
 
                 is Resource.Success -> {
-                    val isEndReached = curPage * PAGE_SIZE >= result.data!!.count
+                    val isEndReached =
+                        pokemonListUiState.value.currPage * PAGE_SIZE >= result.data!!.count
                     val pokedexEntries = result.data.results.mapIndexed { index, entry ->
                         val number = if (entry.url.endsWith("/")) {
                             entry.url.dropLast(1).takeLastWhile { it.isDigit() }
                         } else {
                             entry.url.takeLastWhile { it.isDigit() }
                         }
-                        val url = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$number.png"
+                        val url =
+                            "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/$number.png"
                         PokedexListEntry(
                             pokemonName = entry.name.capitalize(Locale.current),
                             imageUrl = url,
@@ -87,7 +87,8 @@ class PokemonListViewModel @Inject constructor(
                         it.copy(
                             isLoading = false,
                             pokedexEntries = newList,
-                            endReached = isEndReached
+                            endReached = isEndReached,
+                            currPage = it.currPage + 1
                         )
                     }
 
@@ -96,14 +97,14 @@ class PokemonListViewModel @Inject constructor(
         }
     }
 
-    fun calcDominantColor(drawable: Drawable) : Color? {
+    fun calcDominantColor(drawable: Drawable): Color? {
         val bmp = (drawable as BitmapDrawable).bitmap.copy(
             Bitmap.Config.ARGB_8888, true
         )
-        var color : Color? = null
+        var color: Color? = null
         Palette.from(bmp).generate { pallete ->
             pallete?.dominantSwatch?.rgb?.let { colorValue ->
-               color = Color(colorValue)
+                color = Color(colorValue)
             }
         }
         return color
@@ -112,10 +113,10 @@ class PokemonListViewModel @Inject constructor(
 }
 
 
-
 data class PokemonListUiState(
     val pokedexEntries: List<PokedexListEntry> = emptyList(),
     val loadError: String = "",
     val isLoading: Boolean = false,
     val endReached: Boolean = false,
+    val currPage: Int = 0,
 )
