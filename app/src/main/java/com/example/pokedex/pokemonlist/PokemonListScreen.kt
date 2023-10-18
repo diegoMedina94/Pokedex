@@ -82,11 +82,13 @@ fun PokemonListScreen(
         Column {
             Spacer(modifier = Modifier.height(20.dp))
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background),
+                painter = painterResource(id = R.drawable.ic_pokemon_logo),
                 contentDescription = "",
                 modifier = Modifier
                     .fillMaxWidth()
+                    .height(100.dp)
                     .align(CenterHorizontally)
+                    .padding(horizontal = 16.dp)
             )
             SearchBar(
                 modifier = Modifier
