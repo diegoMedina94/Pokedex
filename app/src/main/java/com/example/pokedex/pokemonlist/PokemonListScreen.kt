@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
 import coil.request.ImageRequest
 import com.example.pokedex.R
 import com.example.pokedex.data.models.PokedexListEntry
@@ -204,20 +205,21 @@ fun PokedexEntry(
             }
     ) {
         Column {
+
+
             AsyncImage(
-                model = entry.imageUrl,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(entry.imageUrl)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = entry.pokemonName,
                 modifier = Modifier
                     .size(120.dp)
-                    .align(CenterHorizontally)
-            )
-
-            ImageRequest.Builder(LocalContext.current)
-                .data(entry.imageUrl)
-                .target { drawable ->
-                    dominantColor = pokemonDominantColor(drawable) ?: defaultDominantColor
+                    .align(CenterHorizontally),
+                onSuccess = {
+                    dominantColor = pokemonDominantColor(it.result.drawable) ?: defaultDominantColor
                 }
-                .build()
+            )
 
             Text(
                 text = entry.pokemonName,
